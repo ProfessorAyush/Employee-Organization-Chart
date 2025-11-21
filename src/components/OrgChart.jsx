@@ -101,14 +101,12 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
   const [recentlyMoved, setRecentlyMoved] = useState(null);
   const [resetTrigger, setResetTrigger] = useState(0);
 
-  // Trigger reset when team filter changes
   useEffect(() => {
     setResetTrigger(prev => prev + 1);
   }, [selectedTeam]);
 
   const handleDragStart = (e, employee) => {
     e.stopPropagation();
-    
     setDraggedEmployee(employee);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', employee.id);
@@ -150,9 +148,7 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
     if (isSubordinate(newManager.id, draggedEmployee.id, employees)) {
       toast.error('Cannot create circular reporting structure!', {
         icon: '⚠️',
-        style: {
-          border: '1px solid #f59e0b',
-        },
+        style: { border: '1px solid #f59e0b' },
       });
       setDraggedEmployee(null);
       setDropTarget(null);
@@ -161,42 +157,31 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
 
     const movedEmployee = draggedEmployee.name;
     const newManagerName = newManager.name;
-
-    // Show loading toast
     const toastId = toast.loading(`Moving ${movedEmployee}...`);
 
-    console.log(` Moving ${movedEmployee} (ID: ${draggedEmployee.id}) under ${newManagerName} (ID: ${newManager.id})`);
+    console.log(`🔄 Moving ${movedEmployee} (ID: ${draggedEmployee.id}) under ${newManagerName} (ID: ${newManager.id})`);
 
-    // Visual feedback
     setRecentlyMoved(draggedEmployee.id);
     setTimeout(() => setRecentlyMoved(null), 2000);
 
-    // OPTIMISTIC UPDATE: Update UI immediately
     onEmployeeUpdate(draggedEmployee.id, newManager.id);
-
     setDraggedEmployee(null);
     setDropTarget(null);
 
-    // Make API call in background
     try {
       await updateEmployeeManager(draggedEmployee.id, newManager.id);
       
-      // Success toast
       toast.success(
         <div>
           <strong>{movedEmployee}</strong> now reports to <strong>{newManagerName}</strong>
         </div>,
-        {
-          id: toastId, // Replace loading toast
-          duration: 3000,
-        }
+        { id: toastId, duration: 3000 }
       );
       
-      console.log(` API call successful: Updated ${movedEmployee}'s manager`);
+      console.log(`✅ API call successful: Updated ${movedEmployee}'s manager`);
     } catch (error) {
-      console.error(' API call failed:', error);
+      console.error('❌ API call failed:', error);
       
-      // Error toast
       toast.error(
         <div>
           <strong>Failed to update employee</strong>
@@ -204,13 +189,9 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
             Please refresh the page to see current data
           </div>
         </div>,
-        {
-          id: toastId, // Replace loading toast
-          duration: 5000,
-        }
+        { id: toastId, duration: 5000 }
       );
       
-      // Reload from API to get correct state
       onEmployeeUpdate();
     }
   };
@@ -222,12 +203,13 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
   };
 
   const isSubordinate = (employeeId, managerId, allEmployees) => {
-    let current = allEmployees.find(e => e.id === employeeId);
+    let currentId = employeeId;
     
-    while (current && current.managerId) {
+    while (currentId !== null) {
+      const current = allEmployees.find(e => e.id === currentId);
+      if (!current) break;
       if (current.managerId === managerId) return true;
-      // eslint-disable-next-line no-loop-func
-      current = allEmployees.find(e => e.id === current.managerId);
+      currentId = current.managerId;
     }
     
     return false;
@@ -296,11 +278,11 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
   return (
     <div className="chart-wrapper" style={{ width: '100%', height: '100%' }}>
       <TransformWrapper
-        key={resetTrigger} // Reset when this changes
+        key={resetTrigger}
         initialScale={1}
         minScale={0.3}
         maxScale={3}
-        centerOnInit={true} // Center on initial mount
+        centerOnInit={true}
         limitToBounds={false}
         panning={{
           disabled: !!draggedEmployee,
@@ -316,7 +298,7 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
           mode: 'reset',
         }}
       >
-        {({ zoomIn, zoomOut, resetTransform, setTransform, state }) => (
+        {({ zoomIn, zoomOut, resetTransform, setTransform }) => (
           <>
             <div className="chart-controls">
               <button 
@@ -330,7 +312,7 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
               <button 
                 className="chart-control-btn" 
                 onClick={() => resetTransform()}
-                title="Reset View (or Double Click)"
+                title="Reset View"
               >
                 ⊙
               </button>
@@ -344,22 +326,9 @@ const OrgChart = ({ employees, selectedTeam, onEmployeeUpdate }) => {
               </button>
 
               <div style={{ 
-                padding: '0 8px', 
-                display: 'flex', 
-                alignItems: 'center',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#4b5563',
-                minWidth: '50px',
-                justifyContent: 'center'
-              }}>
-                {Math.round((state?.scale || 1) * 100)}%
-              </div>
-
-              <div style={{ 
                 borderLeft: '1px solid #e5e7eb', 
                 paddingLeft: '8px',
-                marginLeft: '4px',
+                marginLeft: '8px',
                 display: 'flex',
                 gap: '4px'
               }}>
