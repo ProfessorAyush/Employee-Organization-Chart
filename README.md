@@ -32,7 +32,7 @@
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/employee-org-chart.git
+git clone https://github.com/ProfessorAyush/Employee-Organization-Chart.git
 cd employee-org-chart
 ```
 
