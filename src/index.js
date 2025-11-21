@@ -5,7 +5,7 @@ import App from './App';
 import { makeServer } from './services/mirage';
 
 // Start MirageJS server in development
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production') {
   makeServer();
 }
 
